@@ -14,8 +14,6 @@ namespace ConvertFromWordToPDF
 
         static Dictionary<string, string> Directories = new Dictionary<string, string>();
 
-        static string folderPath = @"D:\Confidential\ICT Policies\Outsource\Fish Billing Dev Docs\";
-
         static void Main(string[] args)
         {
             PrintIntro();
