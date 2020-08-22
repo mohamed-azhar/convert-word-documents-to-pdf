@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using ConvertFromWordToPDF.Enums;
+using ConvertFromWordToPDF.Helpers;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,61 +10,38 @@ namespace ConvertFromWordToPDF
 {
     class Program
     {
-        static bool validMenuOptionSelected = false;
         static bool validFileInput = false;
-
+        static bool validMenuOptionSelected = false;
         static Dictionary<string, string> Directories = new Dictionary<string, string>();
 
         static void Main(string[] args)
         {
-            PrintIntro();
-            PrintMenu();
+            DisplayHelpers.PrintIntro();
+            DisplayHelpers.PrintMenu();
 
             int selectedMenuOption = 0;
             SelectMenuOption(ref selectedMenuOption);
 
-            if (selectedMenuOption == 1)
+            switch (selectedMenuOption)
             {
-                PrintSingleConvert();
-                GetInputForSingleConvert();
-                ConvertMany();
+                case (int)MenuOption.SingleConvert:
+                    DisplayHelpers.PrintSingleConvert();
+                    GetInputForSingleConvert();
+                    ConvertMany();
+                    break;
+                case (int)MenuOption.MultipleConvert:
+                    break;
+                case (int)MenuOption.DirectoryConvert:
+                    Console.WriteLine("Multiple Convert");
+                    break;
+                case (int)MenuOption.Quit:
+                    Console.WriteLine("Directory Convert - Coming Soon");
+                    break;
+                default:
+                    Console.WriteLine("Exiting...");
+                    Environment.Exit(0);
+                    break;
             }
-            else if (selectedMenuOption == 2)
-            {
-                Console.WriteLine("Multiple Convert");
-            }
-            else if (selectedMenuOption == 3)
-            {
-                Console.WriteLine("Directory Convert");
-            }
-            else
-            {
-                Console.WriteLine("Exiting...");
-                Environment.Exit(0);
-            }
-        }
-
-        static void PrintIntro()
-        {
-            Console.WriteLine(new string('=', 57));
-            Console.WriteLine("A simple console application to convert word files to pdf");
-            Console.WriteLine("\thttps://github.com/mohamed-azhar");
-            Console.WriteLine(new string('=', 57));
-        }
-
-        static void PrintMenu()
-        {
-            Console.WriteLine("\t\tSelect an Option");
-            Console.WriteLine("\t\t\t1 - Single Convert");
-            Console.WriteLine("\t\t\t2 - Multiple Convert");
-            Console.WriteLine("\t\t\t3 - Directory Convert - Coming Soon");
-            Console.WriteLine("\t\t\t4 - Quit");
-        }
-
-        static void PrintSingleConvert()
-        {
-            Console.WriteLine("\nSingle Convert");
-            Console.WriteLine(new string('=', 57));
         }
 
         static void GetInputForSingleConvert()
@@ -101,7 +79,7 @@ namespace ConvertFromWordToPDF
 
                     if (string.IsNullOrWhiteSpace(targetLocation))
                     {
-                        targetLocation = GetDirectoryFromFilePath(filePath);
+                        targetLocation = FileHelpers.GetDirectoryFromFilePath(filePath);
                     }
 
                     if (!Directory.Exists(targetLocation))
@@ -127,12 +105,14 @@ namespace ConvertFromWordToPDF
 
         static void SelectMenuOption(ref int selectedMenuOption)
         {
+            var count = (int)Enum.GetValues(typeof(MenuOption)).Cast<MenuOption>().Last();
+            
             do
             {
                 Console.Write("select an option: ");
                 int.TryParse(Console.ReadLine(), out int option);
 
-                if (option < 5 && option > 0)
+                if (option < (count+1) && option > 0)
                 {
                     validMenuOptionSelected = true;
                     selectedMenuOption = option;
@@ -164,9 +144,9 @@ namespace ConvertFromWordToPDF
                 string pdfExtension = ".pdf";
                 var extension = Path.GetExtension(source);
 
-                if (IsValidWordFile(extension))
+                if (FileHelpers.IsValidWordFile(extension))
                 {
-                    var fileName = GetFileName(source);
+                    var fileName = FileHelpers.GetFileName(source);
 
                     var converter = new Word2Pdf()
                     {
@@ -194,26 +174,6 @@ namespace ConvertFromWordToPDF
 
                 }
             }
-        }
-
-        static string[] GetFilesInDirectory(string directory)
-        {
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                throw new ArgumentNullException(nameof(directory));
-            }
-
-            var directoryInformation = new DirectoryInfo(directory);
-            return directoryInformation.EnumerateFiles(null, SearchOption.TopDirectoryOnly).Select(x => x.FullName).ToArray();
-        }
-
-        static bool IsValidWordFile(string extension) => extension == ".doc" || extension == ".docx";
-        static string GetFileName(string path) => path.Split("\\").LastOrDefault().Split(".").FirstOrDefault();
-
-        static string GetDirectoryFromFilePath(string filePath)
-        {
-            var splitted = filePath.Split("\\").Reverse().Skip(1).ToArray();
-            return string.Join("\\", splitted.Reverse());
-        }
+        }  
     }
 }
