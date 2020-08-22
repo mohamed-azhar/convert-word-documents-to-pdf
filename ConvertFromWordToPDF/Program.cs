@@ -30,12 +30,14 @@ namespace ConvertFromWordToPDF
                     ConvertMany();
                     break;
                 case (int)MenuOption.MultipleConvert:
+                    Console.WriteLine("Multiple Convert - In Development");
                     break;
                 case (int)MenuOption.DirectoryConvert:
-                    Console.WriteLine("Multiple Convert");
+                    Console.WriteLine("Directory Convert - In Development");
                     break;
                 case (int)MenuOption.Quit:
-                    Console.WriteLine("Directory Convert - Coming Soon");
+                    Console.WriteLine("Exiting...");
+                    Environment.Exit(0);
                     break;
                 default:
                     Console.WriteLine("Exiting...");
