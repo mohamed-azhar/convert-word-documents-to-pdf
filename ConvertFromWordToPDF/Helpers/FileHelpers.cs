@@ -6,12 +6,33 @@ namespace ConvertFromWordToPDF.Helpers
 {
     public class FileHelpers
     {
-        public static bool IsValidWordFile(string extension) => extension == ".doc" || extension == ".docx";
+        public static bool IsValidWordFile(string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                throw new ArgumentNullException(nameof(extension));
+            }
 
-        public static string GetFileName(string path) => path.Split("\\").LastOrDefault().Split(".").FirstOrDefault();
+            return extension == ".doc" || extension == ".docx";
+        }
+
+        public static string GetFileName(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+
+            return path.Split("\\").LastOrDefault().Split(".").FirstOrDefault();
+        }
 
         public static string GetDirectoryFromFilePath(string filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentNullException(nameof(filePath));
+            }
+
             var splitted = filePath.Split("\\").Reverse().Skip(1).ToArray();
             return string.Join("\\", splitted.Reverse());
         }
