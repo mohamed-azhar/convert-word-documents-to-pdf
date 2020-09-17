@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -45,7 +46,26 @@ namespace ConvertFromWordToPDF.Helpers
             }
 
             var directoryInformation = new DirectoryInfo(directory);
-            return directoryInformation.EnumerateFiles(null, SearchOption.TopDirectoryOnly).Select(x => x.FullName).ToArray();
+            return directoryInformation.EnumerateFiles(string.Empty, SearchOption.TopDirectoryOnly).Select(x => x.FullName).ToArray();
+        }
+
+        public static string[] ExtractValidWordFiles(string[] paths)
+        {
+            if (paths?.Any() ?? false)
+            {
+                var filtered = new List<string>();
+
+                foreach (var path in paths)
+                {
+                    if (IsValidWordFile($".{path.Split(".").LastOrDefault()}"))
+                    {
+                        filtered.Add(path);
+                    }
+                }
+
+                return filtered.ToArray();
+            }
+            return null;
         }
     }
 }

@@ -7,13 +7,10 @@ namespace ConvertFromWordToPDF.Enums
         [Display(Name = "Single Convert")]
         SingleConvert = 1,
 
-        [Display(Name = "Multiple Convert")]
-        MultipleConvert = 2,
-
         [Display(Name = "Directory Convert")]
-        DirectoryConvert = 3,
+        DirectoryConvert = 2,
 
         [Display(Name = "Quit")]
-        Quit = 4
+        Quit = 3
     }
 }
