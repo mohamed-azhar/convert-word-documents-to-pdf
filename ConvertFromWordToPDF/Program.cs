@@ -1,7 +1,9 @@
-﻿using ConvertFromWordToPDF.Enums;
+﻿using Colorful;
+using ConvertFromWordToPDF.Enums;
 using ConvertFromWordToPDF.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using WordToPDF;
@@ -18,7 +20,7 @@ namespace ConvertFromWordToPDF
         /// <summary>
         /// Directionary containing source filename and output path name
         /// </summary>
-        static Dictionary<string, string> Directories = new Dictionary<string, string>();
+        static IDictionary<string, string> Directories = new Dictionary<string, string>();
 
         static void Main(string[] args)
         {
@@ -27,8 +29,7 @@ namespace ConvertFromWordToPDF
 
             while (true)
             {
-                int selectedMenuOption = 0;
-                SelectMenuOption(ref selectedMenuOption);
+                int selectedMenuOption = SelectMenuOption();
 
                 switch (selectedMenuOption)
                 {
@@ -60,11 +61,22 @@ namespace ConvertFromWordToPDF
 
                             //get valid word files from the files in the given directory
                             var validFileNames = FileHelpers.ExtractValidWordFiles(fileNames);
-
+                            
                             if (validFileNames?.Any() ?? false)
                             {
+                                DisplayHelpers.Print($"\nFound {validFileNames.Length} files which can be convert to PDF.", Color.Yellow, ConsoleWriteMethod.WriteLine);
+
+                                //display all the valid file names
+                                DisplayHelpers.DisplayValidFileNames(validFileNames);
+
                                 //get output path
                                 var outputPath = GetOutputDirectory();
+
+                                //set output path to be default source path if blank
+                                if (string.IsNullOrWhiteSpace(outputPath))
+                                {
+                                    outputPath = GetOutputDirectoryIfEmptyInput(validFileNames?.FirstOrDefault());
+                                }
 
                                 //prepare the directories dictionary with the valid filenames and their output path
                                 foreach (var fileName in validFileNames)
@@ -72,12 +84,13 @@ namespace ConvertFromWordToPDF
                                     Directories.Add(fileName, outputPath);
                                 }
 
-                                //convert the input file
+                                //convert the input files
                                 ConvertMany();
+                                DisplayHelpers.Print($"\nSuccessfully converted {validFileNames.Length} Files.", Color.DarkGreen, ConsoleWriteMethod.WriteLine);
                             }
                             else
                             {
-                                Console.WriteLine("No valid word files found in the provided directory.\n");
+                                DisplayHelpers.Print("No valid word files found in the provided directory.", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                             }
 
                             //clear the directories
@@ -85,11 +98,11 @@ namespace ConvertFromWordToPDF
                             break;
                         }
                     case (int)MenuOption.Quit:
-                        Console.WriteLine("Exiting...");
+                        DisplayHelpers.Print("Exiting...\n", Color.Gray, ConsoleWriteMethod.WriteLine);
                         Environment.Exit(0);
                         break;
                     default:
-                        Console.WriteLine("Exiting...");
+                        DisplayHelpers.Print("Exiting...\n", Color.Gray, ConsoleWriteMethod.WriteLine);
                         Environment.Exit(0);
                         break;
                 }
@@ -105,8 +118,8 @@ namespace ConvertFromWordToPDF
 
             do
             {
-                Console.Write("Fully qualified path of the file(including the file name): ");
-                filePath = Console.ReadLine();
+                DisplayHelpers.Print("Fully qualified path of the file(including the file name): ", Color.Gray, ConsoleWriteMethod.Write);
+                filePath = System.Console.ReadLine();
 
                 if (File.Exists($"{filePath}{docExtention}"))
                 {
@@ -120,14 +133,14 @@ namespace ConvertFromWordToPDF
                 }
                 else
                 {
-                    Console.WriteLine("File doesnt exist.");
+                    DisplayHelpers.Print("File doesnt exist.\n", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                     validFileInput = false;
                 }
 
                 if (validFileInput)
                 {
-                    Console.Write("Target location for the converted file (leave blank if for the current directory): ");
-                    targetLocation = Console.ReadLine();
+                    DisplayHelpers.Print("Target location for the converted file (leave blank if for the current directory): ", Color.Gray, ConsoleWriteMethod.Write);
+                    targetLocation = System.Console.ReadLine();
 
                     if (string.IsNullOrWhiteSpace(targetLocation))
                     {
@@ -136,14 +149,14 @@ namespace ConvertFromWordToPDF
 
                     if (!Directory.Exists(targetLocation))
                     {
-                        Console.WriteLine("Path doesnt exist so will be created.");
+                        DisplayHelpers.Print("Path doesnt exist so will be created.", Color.Yellow, ConsoleWriteMethod.WriteLine);
                         try
                         {
                             Directory.CreateDirectory(targetLocation);
                         }
                         catch (Exception)
                         {
-                            Console.WriteLine("Something went wrong while creating the specified path.");
+                            DisplayHelpers.Print("Something went wrong while creating the specified path.", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                             Environment.Exit(0);
                         }
                     }
@@ -157,10 +170,11 @@ namespace ConvertFromWordToPDF
 
         static string GetInputForDirectoryConvert()
         {
+            string path = string.Empty;
             do
             {
-                Console.Write("Enter directory path: ");
-                string path = Console.ReadLine();
+                DisplayHelpers.Print("Enter directory path: ", Color.Gray, ConsoleWriteMethod.Write);
+                path = System.Console.ReadLine();
 
                 if (Directory.Exists(path))
                 {
@@ -169,52 +183,45 @@ namespace ConvertFromWordToPDF
                 }
                 else
                 {
-                    try
-                    {
-                        Console.WriteLine("Directory doesn't exist so will be created.");
-                        Directory.CreateDirectory(path);
-                        validDirectoryInput = true;
-                        return path;
-                    }
-                    catch (Exception)
-                    {
-                        validDirectoryInput = false;
-                        Console.WriteLine("Invalid directory\n");
-                    }
+                    validDirectoryInput = false;
+                    DisplayHelpers.Print("Invalid directory.\n", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                 }
-                return path;
             } while (!validDirectoryInput);
+            return path;
         }
 
-        static void SelectMenuOption(ref int selectedMenuOption)
+        static int SelectMenuOption()
         {
             var count = (int)Enum.GetValues(typeof(MenuOption)).Cast<MenuOption>().Max();
-
+            int selectedOption = 0;
             do
             {
-                Console.Write("select an option: ");
-                int.TryParse(Console.ReadLine(), out int option);
+                DisplayHelpers.Print("\nselect an option: ", Color.Gray, ConsoleWriteMethod.Write);
+                int.TryParse(System.Console.ReadLine(), out int option);
 
                 if (option < (count + 1) && option > 0)
                 {
                     validMenuOptionSelected = true;
-                    selectedMenuOption = option;
+                    selectedOption = option;
                 }
                 else
                 {
-                    Console.WriteLine("Invalid option\n");
+                    DisplayHelpers.Print("Invalid option.", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                     validMenuOptionSelected = false;
                 }
 
             } while (!validMenuOptionSelected);
+
+            return selectedOption;
         }
 
         static string GetOutputDirectory()
         {
+            string path = string.Empty;
             do
             {
-                Console.Write("Enter output path: ");
-                string path = Console.ReadLine();
+                DisplayHelpers.Print("Enter output path (leave blank if for the current directory): ", Color.Gray, ConsoleWriteMethod.Write);
+                path = System.Console.ReadLine();
 
                 if (Directory.Exists(path))
                 {
@@ -225,20 +232,31 @@ namespace ConvertFromWordToPDF
                 {
                     try
                     {
-                        Console.WriteLine("Directory doesn't exist so will be created.");
-                        Directory.CreateDirectory(path);
-                        validFileOutput = true;
-
+                        if (string.IsNullOrWhiteSpace(path))
+                        {
+                            validFileOutput = true;
+                        }
+                        else
+                        {
+                            DisplayHelpers.Print("Directory doesnt exist so will be created.", Color.Yellow, ConsoleWriteMethod.WriteLine);
+                            Directory.CreateDirectory(path);
+                            validFileOutput = true;
+                        }
                         return path;
                     }
                     catch (Exception)
                     {
                         validFileOutput = false;
-                        Console.WriteLine("Invalid directory\n");
+                        DisplayHelpers.Print("Invalid directory.\n", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                     }
                 }
-                return path;
             } while (!validFileOutput);
+            return path;
+        }
+
+        static string GetOutputDirectoryIfEmptyInput(string filePath)
+        {
+            return FileHelpers.GetDirectoryFromFilePath(filePath);
         }
 
         static void ConvertMany()
@@ -275,16 +293,16 @@ namespace ConvertFromWordToPDF
                         converter.OutputLocation = source.Replace(sourceExtension, pdfExtension);
                     }
 
-                    Console.WriteLine("\nConverting File: " + fileName);
+                    DisplayHelpers.Print("\nConverting File: " + fileName, Color.Yellow, ConsoleWriteMethod.WriteLine);
 
                     try
                     {
                         var result = converter.Word2PdfCOnversion();
-                        Console.WriteLine("Done...\n");
+                        DisplayHelpers.Print("Done..", Color.DarkGreen, ConsoleWriteMethod.WriteLine);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Something went wrong. Message: {ex.Message}\n");
+                        DisplayHelpers.Print($"Something went wrong. Message: {ex.Message}.\n", Color.DarkRed, ConsoleWriteMethod.WriteLine);
                     }
 
                 }
